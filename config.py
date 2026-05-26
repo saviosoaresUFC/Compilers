@@ -19,6 +19,6 @@ REGEX_SPEC = [
     ("RPAREN", ")"),
     ("SEMICOLON", ";"),
     ("INT_LITERAL", "[0-9]+"),
-    ("ID", "letter(letter|digit|_)*"),
+    ("ID", "letter(letter|digit|_){0,29}"),
     ("STRING", "\"(any_char_except_quote)*\"")
 ]

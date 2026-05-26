@@ -45,19 +45,25 @@ def _add_int_token(global_nfa, state_counter, digitos):
 
 
 def _add_id_token(global_nfa, state_counter, letras, digitos):
-    """Processa um token de identificador (ID)"""
+    """Processa um token de identificador (ID) com limite máximo de 30 caracteres"""
     start_id = state_counter
-    accept_id = state_counter + 1
+    max_id_length = 30
+    id_chars = letras + digitos + "_"
     
-    for char in letras + "_":
-        global_nfa.add_transition(start_id, char, accept_id)
-        
-    for char in letras + digitos + "_":
-        global_nfa.add_transition(accept_id, char, accept_id)
-        
     global_nfa.add_transition(global_nfa.start_state, '', start_id)
-    global_nfa.set_accept(accept_id, "ID")
-    return state_counter + 2
+    previous_state = start_id
+    
+    for position in range(1, max_id_length + 1):
+        current_state = state_counter + position
+        allowed_chars = letras + "_" if position == 1 else id_chars
+        
+        for char in allowed_chars:
+            global_nfa.add_transition(previous_state, char, current_state)
+            
+        global_nfa.set_accept(current_state, "ID")
+        previous_state = current_state
+        
+    return state_counter + max_id_length + 1
 
 
 def _add_string_token(global_nfa, state_counter, todos_caracteres_string):
@@ -150,7 +156,7 @@ if __name__ == "__main__":
         "num", "show", "==", "=", "+", "bool", ";",
         "idade", "_nome", "valor1",
         '"Lucas"', '"Ola mundo!"',
-        "if", "while", "1valor", "25", "0"
+        "if", "while", "1valor", "25", "0", "SavioDeCarvalhoSoaresTestandoMaisDe30Caracteres"
     ]
     
     print("Resultado dos Testes Unitarios no NFA:")
