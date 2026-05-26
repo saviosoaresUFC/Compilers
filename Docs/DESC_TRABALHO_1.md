@@ -43,6 +43,7 @@ A linguagem aceita:
 
 ```text
 + - * / = > < ( ) ; " _ ! @ # $ % & ? |
+```
 
 ---
 

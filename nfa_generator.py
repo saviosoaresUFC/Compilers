@@ -1,5 +1,6 @@
 from automato import NFA
-from config import REGEX_SPEC
+from config import REGEX_SPEC, STRING_ALPHABET
+
 
 def build_nfa_for_literal(token_name, text, start_counter):
     """ Cria um NFA simples e sequencial para palavras reservadas e operadores """
@@ -12,6 +13,7 @@ def build_nfa_for_literal(token_name, text, start_counter):
         
     nfa.set_accept(current, token_name)
     return nfa, current + 1
+
 
 def _add_literal_token(global_nfa, token_name, pattern, state_counter):
     """Processa um token literal (palavra reservada ou operador)"""
@@ -27,6 +29,21 @@ def _add_literal_token(global_nfa, token_name, pattern, state_counter):
     global_nfa.accept_states.update(sub_nfa.accept_states)
     return next_counter
 
+
+def _add_int_token(global_nfa, state_counter, digitos):
+    """Processa um token de literal numérico inteiro"""
+    start_int = state_counter
+    accept_int = state_counter + 1
+    
+    for char in digitos:
+        global_nfa.add_transition(start_int, char, accept_int)
+        global_nfa.add_transition(accept_int, char, accept_int)
+        
+    global_nfa.add_transition(global_nfa.start_state, '', start_int)
+    global_nfa.set_accept(accept_int, "INT_LITERAL")
+    return state_counter + 2
+
+
 def _add_id_token(global_nfa, state_counter, letras, digitos):
     """Processa um token de identificador (ID)"""
     start_id = state_counter
@@ -39,8 +56,9 @@ def _add_id_token(global_nfa, state_counter, letras, digitos):
         global_nfa.add_transition(accept_id, char, accept_id)
         
     global_nfa.add_transition(global_nfa.start_state, '', start_id)
-    global_nfa.accept_states[accept_id] = "ID"
+    global_nfa.set_accept(accept_id, "ID")
     return state_counter + 2
+
 
 def _add_string_token(global_nfa, state_counter, todos_caracteres_string):
     """Processa um token de string"""
@@ -56,8 +74,9 @@ def _add_string_token(global_nfa, state_counter, todos_caracteres_string):
     global_nfa.add_transition(body_str, '"', accept_str)
     
     global_nfa.add_transition(global_nfa.start_state, '', start_str)
-    global_nfa.accept_states[accept_str] = "STRING"
+    global_nfa.set_accept(accept_str, "STRING")
     return state_counter + 3
+
 
 def build_global_nfa(spec):
     global_nfa = NFA(start_state=0)
@@ -65,13 +84,14 @@ def build_global_nfa(spec):
     
     letras = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     digitos = "0123456789"
-    todos_caracteres_string = letras + digitos + " +-*/=><();_!@#$%&?| \t" # Alfabeto completo da LangC menos as aspas
     
     for token_name, pattern in spec:
         if token_name == "ID":
             state_counter = _add_id_token(global_nfa, state_counter, letras, digitos)
         elif token_name == "STRING":
-            state_counter = _add_string_token(global_nfa, state_counter, todos_caracteres_string)
+            state_counter = _add_string_token(global_nfa, state_counter, STRING_ALPHABET)
+        elif token_name == "INT_LITERAL":
+            state_counter = _add_int_token(global_nfa, state_counter, digitos)
         else:
             state_counter = _add_literal_token(global_nfa, token_name, pattern, state_counter)
             
@@ -79,38 +99,47 @@ def build_global_nfa(spec):
 
 def epsilon_closure(nfa, states):
     """Retorna todos os estados alcançáveis a partir dos 'states' usando apenas transições vazias ('')"""
-    closure = list(states)
-    stack = list(states)
+    closure = set(states)
+    stack = list(closure)
     
     while stack:
         current = stack.pop()
         if current in nfa.transitions and '' in nfa.transitions[current]:
             for next_state in nfa.transitions[current]['']:
                 if next_state not in closure:
-                    closure.append(next_state)
+                    closure.add(next_state)
                     stack.append(next_state)
     return closure
 
+
 def simulate_nfa(nfa, input_string):
     """Simula a execução do NFA para uma string de entrada completa"""
-    current_states = epsilon_closure(nfa, [nfa.start_state])
+    current_states = epsilon_closure(nfa, {nfa.start_state})
     
     for char in input_string:
-        next_states = []
+        next_states = set()
         for state in current_states:
             if state in nfa.transitions and char in nfa.transitions[state]:
-                next_states.extend(nfa.transitions[state][char])
+                next_states.update(nfa.transitions[state][char])
         
         current_states = epsilon_closure(nfa, next_states)
         
         if not current_states:
             return None
             
+    priority_map = {token_name: i for i, (token_name, _) in enumerate(REGEX_SPEC)}
+    
+    accepted_tokens = []
     for state in current_states:
         if state in nfa.accept_states:
-            return nfa.accept_states[state] # retorna o nome do token por ex. "SHOW"
+            accepted_tokens.append(nfa.accept_states[state])
+            
+    if accepted_tokens:
+        accepted_tokens.sort(key=lambda t: priority_map.get(t, float('inf')))
+        return accepted_tokens[0]  # retorna o nome do token com maior prioridade
             
     return None
+
 
 if __name__ == "__main__":
     nfa_completo = build_global_nfa(REGEX_SPEC)
@@ -118,10 +147,10 @@ if __name__ == "__main__":
     print("-" * 40)
     
     testes = [
-        "num", "show", "==", "=", "+", "bool", ";", 
-        "idade", "_nome", "valor1", 
+        "num", "show", "==", "=", "+", "bool", ";",
+        "idade", "_nome", "valor1",
         '"Lucas"', '"Ola mundo!"',
-        "if", "while", "1valor"
+        "if", "while", "1valor", "25", "0"
     ]
     
     print("Resultado dos Testes Unitarios no NFA:")

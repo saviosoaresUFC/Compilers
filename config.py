@@ -1,3 +1,5 @@
+STRING_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 +-*/=><();_!@#$%&?| \t\n"
+
 REGEX_SPEC = [
     ("NUM", "num"),
     ("TEXT", "text"),
@@ -16,6 +18,7 @@ REGEX_SPEC = [
     ("LPAREN", "("),
     ("RPAREN", ")"),
     ("SEMICOLON", ";"),
+    ("INT_LITERAL", "[0-9]+"),
     ("ID", "letter(letter|digit|_)*"),
     ("STRING", "\"(any_char_except_quote)*\"")
 ]
