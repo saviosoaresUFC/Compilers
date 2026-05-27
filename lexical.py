@@ -31,7 +31,6 @@ TOKEN_OUTPUT_NAME = {
 
 
 def simulate_dfa(dfa, input_string):
-    """Simula a execução de um DFA caractere por caractere."""
     current_state = dfa.start_state
 
     for char in input_string:
@@ -44,14 +43,11 @@ def simulate_dfa(dfa, input_string):
         return dfa.accept_states[current_state]
     return None
 
-
-def tokenize_line(dfa, line):
     """
-    Percorre a linha caractere a caractere aplicando a estratégia de
-    maximal munch: sempre tenta consumir o maior lexema válido possível.
-
+    Percorre a linha caractere usando a estratégia de maximal munch.
     Retorna uma lista de tokens de saída ou None em caso de erro léxico.
     """
+def tokenize_line(dfa, line):
     tokens = []
     i = 0
     n = len(line)
@@ -80,13 +76,7 @@ def tokenize_line(dfa, line):
 
     return tokens
 
-
-def analisar(source_code, dfa):
-    """
-    Recebe o código-fonte completo como string e retorna a saída do
-    analisador léxico: uma linha de tokens por linha de entrada, ou
-    'ERRO' quando há erro léxico.
-    """
+def analyze(source_code, dfa):
     output_lines = []
 
     for line in source_code.splitlines():
@@ -98,7 +88,7 @@ def analisar(source_code, dfa):
         result = tokenize_line(dfa, stripped)
 
         if result is None:
-            output_lines.append("ERRO")
+            return "ERRO"
         else:
             output_lines.append(" ".join(result))
 
@@ -110,15 +100,15 @@ if __name__ == "__main__":
     dfa = nfa_to_dfa(nfa_base, REGEX_SPEC)
 
     if len(sys.argv) < 2:
-        print("Uso: python lexico.py <arquivo_fonte>")
+        print("Uso: python lexical.py <arquivo_fonte>")
         sys.exit(1)
 
-    caminho = sys.argv[1]
+    file_path = sys.argv[1]
     try:
-        with open(caminho, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             source = f.read()
     except FileNotFoundError:
-        print(f"ERRO: Arquivo '{caminho}' não encontrado.")
+        print(f"ERRO: Arquivo '{file_path}' não encontrado.")
         sys.exit(1)
 
-    print(analisar(source, dfa))
+    print(analyze(source, dfa))
