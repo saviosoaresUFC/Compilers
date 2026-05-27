@@ -1,0 +1,124 @@
+import sys
+from config import REGEX_SPEC
+from nfa_generator import build_global_nfa
+from dfa_converter import nfa_to_dfa
+
+# ---------------------------------------------------------------------------
+# Mapeamento interno -> nome de saída exigido pelo enunciado
+# ---------------------------------------------------------------------------
+TOKEN_OUTPUT_NAME = {
+    "NUM":              "NUM",
+    "TEXT":             "TEXT",
+    "BOOL":             "BOOL",
+    "SHOW":             "SHOW",
+    "TRUE":             "TRUE",
+    "FALSE":            "FALSE",
+    "OP_EQ":            "EQ",
+    "OP_ASSIGN_OR_EQ":  "EQ",
+    "OP_ADD":           "ADD",
+    "OP_SUB":           "SUB",
+    "OP_MULT":          "MULT",
+    "OP_DIV":           "DIV",
+    "OP_GT":            "GT",
+    "OP_LT":            "LT",
+    "LPAREN":           "LPAREN",
+    "RPAREN":           "RPAREN",
+    "SEMICOLON":        "SEMICOLON",
+    "INT_LITERAL":      "NUM",
+    "ID":               "VAR",
+    "STRING":           "CONST",
+}
+
+
+def simulate_dfa(dfa, input_string):
+    """Simula a execução de um DFA caractere por caractere."""
+    current_state = dfa.start_state
+
+    for char in input_string:
+        if current_state in dfa.transitions and char in dfa.transitions[current_state]:
+            current_state = dfa.transitions[current_state][char]
+        else:
+            return None
+
+    if current_state in dfa.accept_states:
+        return dfa.accept_states[current_state]
+    return None
+
+
+def tokenize_line(dfa, line):
+    """
+    Percorre a linha caractere a caractere aplicando a estratégia de
+    maximal munch: sempre tenta consumir o maior lexema válido possível.
+
+    Retorna uma lista de tokens de saída ou None em caso de erro léxico.
+    """
+    tokens = []
+    i = 0
+    n = len(line)
+
+    while i < n:
+        if line[i] in (' ', '\t'):
+            i += 1
+            continue
+
+        last_valid_end = -1
+        last_valid_token = None
+
+        for j in range(i + 1, n + 1):
+            lexeme = line[i:j]
+            result = simulate_dfa(dfa, lexeme)
+            if result is not None:
+                last_valid_end = j
+                last_valid_token = result
+
+        if last_valid_token is None:
+            return None
+
+        output_name = TOKEN_OUTPUT_NAME.get(last_valid_token, last_valid_token)
+        tokens.append(output_name)
+        i = last_valid_end
+
+    return tokens
+
+
+def analisar(source_code, dfa):
+    """
+    Recebe o código-fonte completo como string e retorna a saída do
+    analisador léxico: uma linha de tokens por linha de entrada, ou
+    'ERRO' quando há erro léxico.
+    """
+    output_lines = []
+
+    for line in source_code.splitlines():
+        stripped = line.strip()
+
+        if not stripped:
+            continue
+
+        result = tokenize_line(dfa, stripped)
+
+        if result is None:
+            output_lines.append("ERRO")
+        else:
+            output_lines.append(" ".join(result))
+
+    return "\n".join(output_lines)
+
+
+if __name__ == "__main__":
+    nfa_base = build_global_nfa(REGEX_SPEC)
+    dfa = nfa_to_dfa(nfa_base, REGEX_SPEC)
+
+    if len(sys.argv) < 2:
+        print("Uso: python lexico.py <arquivo_fonte>")
+        sys.exit(1)
+
+    caminho = sys.argv[1]
+    try:
+        with open(caminho, "r", encoding="utf-8") as f:
+            source = f.read()
+    except FileNotFoundError:
+        print(f"ERRO: Arquivo '{caminho}' não encontrado.")
+        sys.exit(1)
+
+    print(analisar(source, dfa))
