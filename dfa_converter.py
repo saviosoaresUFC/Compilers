@@ -1,3 +1,4 @@
+from collections import deque
 from automato import DFA
 from nfa_generator import epsilon_closure 
 
@@ -10,7 +11,8 @@ def nfa_to_dfa(nfa, regex_spec):
     
     start_closure = frozenset(epsilon_closure(nfa, {nfa.start_state}))
     dfa_states_map = {start_closure: 0}
-    unmarked_states = [start_closure]
+    
+    unmarked_states = deque([start_closure])
     state_counter = 1
     
     alphabet = set()
@@ -20,7 +22,7 @@ def nfa_to_dfa(nfa, regex_spec):
                 alphabet.add(symbol)
                 
     while unmarked_states:
-        current_nfa_states = unmarked_states.pop(0)
+        current_nfa_states = unmarked_states.popleft()
         current_dfa_state_id = dfa_states_map[current_nfa_states]
         
         accepted_tokens = []
