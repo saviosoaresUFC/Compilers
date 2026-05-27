@@ -15,3 +15,18 @@ class NFA:
 
     def set_accept(self, state, token_type):
         self.accept_states[state] = token_type
+
+
+class DFA:
+    def __init__(self, start_state=0):
+        self.start_state = start_state
+        self.transitions = {}  # { estado_origem: { 'simbolo': estado_destino } }
+        self.accept_states = {} # { estado_aceitacao: "NOME_DO_TOKEN" }
+
+    def add_transition(self, from_state, symbol, to_state):
+        if from_state not in self.transitions:
+            self.transitions[from_state] = {}
+        self.transitions[from_state][symbol] = to_state
+
+    def set_accept(self, state, token_type):
+        self.accept_states[state] = token_type
