@@ -69,6 +69,17 @@ def tokenize_line(dfa, line):
 
         if last_valid_token is None:
             return None
+        
+        if last_valid_token in ("ID", "INT_LITERAL"):
+            if last_valid_end < n:
+                next_char = line[last_valid_end]
+                if next_char.isalnum() or next_char == '_':
+                    # A palavra foi cortada no meio (ex: estourou limite de tamanho)
+                    return None
+
+        output_name = TOKEN_OUTPUT_NAME.get(last_valid_token, last_valid_token)
+        tokens.append(output_name)
+        i = last_valid_end
 
         output_name = TOKEN_OUTPUT_NAME.get(last_valid_token, last_valid_token)
         tokens.append(output_name)
