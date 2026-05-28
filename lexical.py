@@ -3,9 +3,6 @@ from config import REGEX_SPEC
 from nfa_generator import build_global_nfa
 from dfa_converter import nfa_to_dfa
 
-# ---------------------------------------------------------------------------
-# Mapeamento interno -> nome de saída exigido pelo enunciado
-# ---------------------------------------------------------------------------
 TOKEN_OUTPUT_NAME = {
     "NUM":              "NUM",
     "TEXT":             "TEXT",
@@ -43,10 +40,8 @@ def simulate_dfa(dfa, input_string):
         return dfa.accept_states[current_state]
     return None
 
-    """
-    Percorre a linha caractere usando a estratégia de maximal munch.
-    Retorna uma lista de tokens de saída ou None em caso de erro léxico.
-    """
+
+# utiliza a estrategia maximal munch
 def tokenize_line(dfa, line):
     tokens = []
     i = 0
@@ -69,17 +64,12 @@ def tokenize_line(dfa, line):
 
         if last_valid_token is None:
             return None
-        
+
         if last_valid_token in ("ID", "INT_LITERAL"):
             if last_valid_end < n:
                 next_char = line[last_valid_end]
                 if next_char.isalnum() or next_char == '_':
-                    # A palavra foi cortada no meio (ex: estourou limite de tamanho)
                     return None
-
-        output_name = TOKEN_OUTPUT_NAME.get(last_valid_token, last_valid_token)
-        tokens.append(output_name)
-        i = last_valid_end
 
         output_name = TOKEN_OUTPUT_NAME.get(last_valid_token, last_valid_token)
         tokens.append(output_name)
@@ -87,6 +77,13 @@ def tokenize_line(dfa, line):
 
     return tokens
 
+
+"""
+    Recebe o código-fonte completo como string e retorna a saída do
+    analisador léxico: uma linha de tokens por linha de entrada, ou
+    a palavra 'ERRO' (sozinha) caso qualquer linha tenha erro léxico,
+    invalidando toda a entrada.
+"""
 def analyze(source_code, dfa):
     output_lines = []
 
@@ -100,8 +97,8 @@ def analyze(source_code, dfa):
 
         if result is None:
             return "ERRO"
-        else:
-            output_lines.append(" ".join(result))
+
+        output_lines.append(" ".join(result))
 
     return "\n".join(output_lines)
 
