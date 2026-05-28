@@ -28,6 +28,7 @@ TOKEN_OUTPUT_NAME = {
 
 
 def simulate_dfa(dfa, input_string):
+    """Simula a execução de um DFA caractere por caractere."""
     current_state = dfa.start_state
 
     for char in input_string:
@@ -43,6 +44,10 @@ def simulate_dfa(dfa, input_string):
 
 # utiliza a estrategia maximal munch
 def tokenize_line(dfa, line):
+    """
+    Percorre a linha caractere a caractere usando a estratégia de maximal munch.
+    Retorna uma lista de tokens de saída ou None em caso de erro léxico.
+    """
     tokens = []
     i = 0
     n = len(line)
@@ -71,7 +76,13 @@ def tokenize_line(dfa, line):
                 if next_char.isalnum() or next_char == '_':
                     return None
 
-        output_name = TOKEN_OUTPUT_NAME.get(last_valid_token, last_valid_token)
+        # Fail-fast: se o token retornado pelo DFA não possui mapeamento
+        # oficial na linguagem, trata como erro léxico em vez de propagar
+        # o nome interno silenciosamente na saída.
+        if last_valid_token not in TOKEN_OUTPUT_NAME:
+            return None
+
+        output_name = TOKEN_OUTPUT_NAME[last_valid_token]
         tokens.append(output_name)
         i = last_valid_end
 
