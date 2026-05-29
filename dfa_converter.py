@@ -9,7 +9,14 @@ def nfa_to_dfa(nfa, regex_spec):
     dfa = DFA(start_state=0)
     priority_map = {token_name: i for i, (token_name, _) in enumerate(regex_spec)}
     
-    start_closure = frozenset(epsilon_closure(nfa, {nfa.start_state}))
+    epsilon_cache = {}
+    def get_closure(states):
+        frozen = frozenset(states)
+        if frozen not in epsilon_cache:
+            epsilon_cache[frozen] = epsilon_closure(nfa, states)
+        return epsilon_cache[frozen]
+    
+    start_closure = frozenset(get_closure({nfa.start_state}))
     dfa_states_map = {start_closure: 0}
     
     unmarked_states = deque([start_closure])
@@ -43,7 +50,7 @@ def nfa_to_dfa(nfa, regex_spec):
             if not reachable:
                 continue 
                 
-            next_nfa_states = frozenset(epsilon_closure(nfa, reachable))
+            next_nfa_states = frozenset(get_closure(reachable))
             
             if next_nfa_states not in dfa_states_map:
                 dfa_states_map[next_nfa_states] = state_counter

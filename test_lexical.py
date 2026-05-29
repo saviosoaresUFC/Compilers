@@ -150,14 +150,14 @@ def test_operador_igual():
 if __name__ == "__main__":
 
     print("=" * 50)
-    print("TESTES DO ANALISADOR LÉXICO - LangC")
+    print("TESTES DO ANALISADOR LEXICO - LangC")
     print("=" * 50)
 
     print(f"\nDFA inicializado com {len(global_dfa.transitions)} estados.\n")
 
     casos_teste = [
         (
-            "Teste 1 - Exemplo básico",
+            "Teste 1 - Exemplo basico",
             'num a = 0 ;\nnum b = 5 + a ;\ntext c = "teSte" ;\n'
         ),
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         ),
 
         (
-            "Teste 4 - Erro léxico",
+            "Teste 4 - Erro lexico",
             'num x = 5 ;\n'
             'num y = @invalido ;\n'
             'show x ;\n'
@@ -210,10 +210,10 @@ if __name__ == "__main__":
         print(f"\n{titulo}")
         print("-" * 50)
 
-        print("Código de entrada:\n")
+        print("Codigo de entrada:\n")
         print(codigo.rstrip())
 
-        print("\nSaída gerada:\n")
+        print("\nSaida gerada:\n")
 
         resultado = run_analysis(codigo)
 

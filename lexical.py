@@ -1,30 +1,7 @@
 import sys
-from config import REGEX_SPEC
+from config import REGEX_SPEC, TOKEN_OUTPUT_NAME
 from nfa_generator import build_global_nfa
 from dfa_converter import nfa_to_dfa
-
-TOKEN_OUTPUT_NAME = {
-    "NUM":              "NUM",
-    "TEXT":             "TEXT",
-    "BOOL":             "BOOL",
-    "SHOW":             "SHOW",
-    "TRUE":             "TRUE",
-    "FALSE":            "FALSE",
-    "OP_EQ":            "EQ",
-    "OP_ASSIGN_OR_EQ":  "EQ",
-    "OP_ADD":           "ADD",
-    "OP_SUB":           "SUB",
-    "OP_MULT":          "MULT",
-    "OP_DIV":           "DIV",
-    "OP_GT":            "GT",
-    "OP_LT":            "LT",
-    "LPAREN":           "LPAREN",
-    "RPAREN":           "RPAREN",
-    "SEMICOLON":        "SEMICOLON",
-    "INT_LITERAL":      "NUM",
-    "ID":               "VAR",
-    "STRING":           "CONST",
-}
 
 
 def simulate_dfa(dfa, input_string):
@@ -59,13 +36,21 @@ def tokenize_line(dfa, line):
 
         last_valid_end = -1
         last_valid_token = None
-
-        for j in range(i + 1, n + 1):
-            lexeme = line[i:j]
-            result = simulate_dfa(dfa, lexeme)
-            if result is not None:
-                last_valid_end = j
-                last_valid_token = result
+        current_state = dfa.start_state
+        
+        # avança char por char sem reiniciar o DFA
+        for j in range(i, n):
+            char = line[j]
+            
+            if current_state in dfa.transitions and char in dfa.transitions[current_state]:
+                current_state = dfa.transitions[current_state][char]
+                
+                # salva como melhor candidato até o momento
+                if current_state in dfa.accept_states:
+                    last_valid_end = j + 1
+                    last_valid_token = dfa.accept_states[current_state]
+            else:
+                break
 
         if last_valid_token is None:
             return None
@@ -76,14 +61,10 @@ def tokenize_line(dfa, line):
                 if next_char.isalnum() or next_char == '_':
                     return None
 
-        # Fail-fast: se o token retornado pelo DFA não possui mapeamento
-        # oficial na linguagem, trata como erro léxico em vez de propagar
-        # o nome interno silenciosamente na saída.
         if last_valid_token not in TOKEN_OUTPUT_NAME:
             return None
 
-        output_name = TOKEN_OUTPUT_NAME[last_valid_token]
-        tokens.append(output_name)
+        tokens.append(TOKEN_OUTPUT_NAME[last_valid_token])
         i = last_valid_end
 
     return tokens
