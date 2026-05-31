@@ -22,3 +22,26 @@ REGEX_SPEC = [
     ("ID", "letter(letter|digit|_){0,29}"),
     ("STRING", "\"(any_char_except_quote)*\"")
 ]
+
+TOKEN_OUTPUT_NAME = {
+    "NUM":              "NUM",
+    "TEXT":             "TEXT",
+    "BOOL":             "BOOL",
+    "SHOW":             "SHOW",
+    "TRUE":             "TRUE",
+    "FALSE":            "FALSE",
+    "OP_EQ":            "EQ",
+    "OP_ASSIGN_OR_EQ":  "EQ",
+    "OP_ADD":           "ADD",
+    "OP_SUB":           "SUB",
+    "OP_MULT":          "MULT",
+    "OP_DIV":           "DIV",
+    "OP_GT":            "GT",
+    "OP_LT":            "LT",
+    "LPAREN":           "LPAREN",
+    "RPAREN":           "RPAREN",
+    "SEMICOLON":        "SEMICOLON",
+    "INT_LITERAL":      "NUM",
+    "ID":               "VAR",
+    "STRING":           "CONST",
+}
